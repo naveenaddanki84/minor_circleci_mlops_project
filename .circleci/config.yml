@@ -23,7 +23,6 @@ jobs:
               echo "$GCLOUD_SERVICE_KEY" | base64 --decode > gcp-key.json
               gcloud auth activate-service-account --key-file=gcp-key.json
               gcloud auth configure-docker us-central1-docker.pkg.dev || gcloud auth configure-docker
-
       - run:
           name: Build and Push Image
           command: |
@@ -41,11 +40,12 @@ jobs:
               echo "$GCLOUD_SERVICE_KEY" | base64 --decode > gcp-key.json
               gcloud auth activate-service-account --key-file=gcp-key.json
               gcloud auth configure-docker us-central1-docker.pkg.dev || gcloud auth configure-docker
-      
       - run:
           name: Configure GKE
           command: |
-              gcloud container clusters get-credentials $GKE_CLUSTER --region $GOOGLE_COMPUTE_REGION --project $GOOGLE_PROJECT_ID
+              # Added fallback to use us-central1 as the region if $GOOGLE_COMPUTE_REGION is not set
+              REGION=${GOOGLE_COMPUTE_REGION:-us-central1}
+              gcloud container clusters get-credentials $GKE_CLUSTER --region $REGION --project $GOOGLE_PROJECT_ID
       - run:
           name: Deploy to GKE
           command: |
@@ -62,10 +62,3 @@ workflows:
       - deploy_to_gke:
           requires:
             - build_docker_image
-
-    
-
-
-
-
-
